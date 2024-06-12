@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  node:
+    build:
+      context: .
+    hostname: node
+    ports: 
+      - "3000:3000"
+    env_file:
+      - ./.env
+    volumes:
+      - ./src/:/opt/app
+      - /opt/app/node_modules/
+    networks:
+      - default
+  mysql:
+    platform: linux/x86_64
+    image: mysql:8.0.35
+    hostname: mysql
+    ports: 
+      - "3306:3306"
+    env_file:
+      - ./.env
+    command: --default-authentication-plugin=caching_sha2_password --sql_mode=""
+    healthcheck:
+        test: '/usr/bin/mysql -h127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --execute "SHOW DATABASES;"'
+        interval: 2s
+        timeout: 20s
+        retries: 1000
+    volumes:
+        - db-volume:/var/lib/mysql
+        - ./dump:/docker-entrypoint-initdb.d
+    networks:
+        - default
+volumes:
+  db-volume:
